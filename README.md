@@ -9,16 +9,28 @@ An independent guide to checking firmware and configuring the Xiaomi Router 1000
 | Four 2.5 GbE ports and two 10 GbE interfaces | Documented | Identify the ports and their selectable roles on your unit. |
 | Internet PPPoE with an 802.1Q tag on a 2.5 GbE WAN port | Pending hardware test | Confirm the tag on the selected physical port and establish a real ISP session. |
 | DHCPv6 prefix delegation and custom IPv6 DNS | Pending hardware test | Confirm IPv6 routing and inspect the DNS settings received by actual clients. |
-| Local administrative SSH | Pending hardware test | Confirm a supported administrator-access method for the exact firmware. |
+| Local administrative SSH on RC01, MiWiFi 1.1.56 | Administrator login observed after a manual update on one unit | Confirm a supported access method and repeat key-only, reboot, and network isolation tests on your unit. |
 | Wi-Fi features and coverage | Pending hardware test | Record regional settings, client capabilities, channel width, and measurements. |
 
 ## 1. Identify the router and check firmware
 
 Connect one computer to the router by Ethernet on an isolated bench. Record the model code, hardware revision, firmware build, and firmware region. Check the router's built-in updater for the latest stable version available for that exact unit. Use the vendor's update and recovery instructions and keep a configuration export or a record of settings needed to restore access. Recheck port assignments and saved settings after reboot. [Xiaomi firmware update guide](https://www.mi.com/global/support/faq/details/KA-348402/).
 
-## 2. Verify supported local SSH access
+## 2. Verify and secure existing local SSH access
 
-Check the device's administration panel and documentation for a supported SSH option. If available, verify the host key on first connection, use key-based authentication where supported, and restrict access to the management network. Test login after a reboot and verify that the management port is unreachable from WAN and guest networks. Record the model and firmware used. Some vendor developer interfaces grant limited application access, so verify that the account actually supports the administration tasks you need.
+### RC01 bench result
+
+An RC01 was recovered in an isolated Ethernet setup and later manually updated to MiWiFi 1.1.56. The operator reported a successful administrator SSH login after the update. The English UI was selected, with some labels still in Chinese. Hardware revision and regulatory region were not independently established. Vendor support for stock administrative SSH on this build remains unconfirmed.
+
+A later wired check reached SSH, the web interface, and Telnet. The installed SSH server offered legacy RSA host-key negotiation, and a strict connection using the previously recorded host key reached authentication but had no accepted client key. Host-key changes had been observed during firmware changes. A fresh reboot, key-only access, and isolation from guest and WAN clients still require acceptance tests.
+
+### Acceptance checks
+
+1. Use a wired management computer on an isolated bench. If you need initial administrator access, check Xiaomi's documentation and support options for your exact model and firmware. Back up the configuration and confirm a recovery path before changing access settings.
+2. With existing authorized access, establish the server's host-key fingerprint through a trusted local path and pin it in the client. Investigate a changed key before accepting it. Check which persistent location actually supplies the server's key and authorized users at startup. Prefer a host-key algorithm supported by current clients.
+3. Add a dedicated administrator public key through the supported configuration for the running SSH service. Keep an authenticated recovery session and prove key login from a second wired session. Only then disable SSH password authentication, turn off Telnet, and constrain administration to the trusted management network.
+4. Reboot the router. Verify the pinned host key, a new key-only login, refusal of password authentication, and the expected access policy from management, guest and WAN test clients over IPv4 and IPv6. A listening socket alone cannot establish whether the firewall permits access.
+5. Before another firmware update, retain a private backup and a rollback path. Repeat the checks following the update and record which tests passed for that specific build.
 
 ## 3. Set up PPPoE and VLAN tagging
 
